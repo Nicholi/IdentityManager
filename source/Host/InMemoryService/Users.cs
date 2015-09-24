@@ -20,6 +20,8 @@ using System.Security.Claims;
 
 namespace IdentityManager.Host.InMemoryService
 {
+    using IdentityServer3.Core.Services.InMemory;
+
     public class Users
     {
         public static ICollection<InMemoryUser> Get(int random = 0)
@@ -30,26 +32,26 @@ namespace IdentityManager.Host.InMemoryService
                     Subject = Guid.Parse("081d965f-1f84-4360-90e4-8f6deac7b9bc").ToString(),
                     Username = "alice",
                     Password = "alice",
-                    Email = "alice@email.com",
-                    Mobile = "123",
                     Claims = new HashSet<Claim>{
                         new Claim(Constants.ClaimTypes.Name, "Alice Smith"),
                         new Claim(Constants.ClaimTypes.Role, "admin"),
                         new Claim(Constants.ClaimTypes.Role, "employee"),
                         new Claim(Constants.ClaimTypes.Role, "manager"),
                         new Claim("department", "sales"),
+                        new Claim(Constants.ClaimTypes.Email, "alice@email.com"),
+                        new Claim(Constants.ClaimTypes.Phone, "123")
                     }
                 },
                 new InMemoryUser{
                     Subject = Guid.Parse("5f292677-d3d2-4bf9-a6f8-e982d08e1306").ToString(),
                     Username = "bob",
                     Password = "bob",
-                    Email = "bob@email.com",
                     Claims = new HashSet<Claim>{
                         new Claim(Constants.ClaimTypes.Name, "Bob Smith"),
                         new Claim(Constants.ClaimTypes.Role, "employee"),
                         new Claim(Constants.ClaimTypes.Role, "developer"),
                         new Claim("department", "IT"),
+                        new Claim(Constants.ClaimTypes.Email, "bob@email.com")
                     }
                 },
             };
@@ -58,9 +60,11 @@ namespace IdentityManager.Host.InMemoryService
             {
                 var user = new InMemoryUser
                 {
-                    Username = GenName().ToLower()
+                    Username = GenName().ToLower(),
+                    Claims = new HashSet<Claim>{
+                        new Claim(Constants.ClaimTypes.Name, GenName() + " " + GenName())
+                    }
                 };
-                user.Claims.Add(new Claim("name", GenName() + " " + GenName()));
                 users.Add(user);
             }
 

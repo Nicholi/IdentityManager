@@ -29,6 +29,7 @@ using Microsoft.Owin;
 using IdentityManager.Host;
 using System.Threading.Tasks;
 using System.IdentityModel.Tokens;
+using IdentityServer3.Core.Services.InMemory;
 using Microsoft.Owin.Security.Cookies;
 
 [assembly: OwinStartup(typeof(StartupWithLocalhostSecurity))]

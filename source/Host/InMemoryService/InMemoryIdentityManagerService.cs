@@ -20,6 +20,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using IdentityManager.Extensions;
+using IdentityServer3.Core.Services.InMemory;
 
 namespace IdentityManager.Host.InMemoryService
 {
@@ -104,7 +105,7 @@ namespace IdentityManager.Host.InMemoryService
 
         private IdentityManagerResult SetName(InMemoryUser user, string value)
         {
-            user.Claims.SetValue(Constants.ClaimTypes.Name, value);
+            user.Claims = user.Claims.ToList().SetValue(Constants.ClaimTypes.Name, value);
             return IdentityManagerResult.Success;
         }
 
@@ -240,7 +241,7 @@ namespace IdentityManager.Host.InMemoryService
                 return Task.FromResult(new IdentityManagerResult("No user found"));
             }
 
-            user.Claims.AddClaim(type, value);
+            user.Claims = user.Claims.ToList().AddClaim(type, value);
             
             return Task.FromResult(IdentityManagerResult.Success);
         }
@@ -253,7 +254,7 @@ namespace IdentityManager.Host.InMemoryService
                 return Task.FromResult(new IdentityManagerResult("No user found"));
             }
 
-            user.Claims.RemoveClaims(type, value);
+            user.Claims = user.Claims.ToList().RemoveClaims(type, value);
 
             return Task.FromResult(IdentityManagerResult.Success);
         }
@@ -292,17 +293,17 @@ namespace IdentityManager.Host.InMemoryService
                         var val = Boolean.Parse(value);
                         if (val)
                         {
-                            user.Claims.AddClaim(Constants.ClaimTypes.Role, "admin");
+                            user.Claims = user.Claims.ToList().AddClaim(Constants.ClaimTypes.Role, "admin");
                         }
                         else
                         {
-                            user.Claims.RemoveClaim(Constants.ClaimTypes.Role, "admin");
+                            user.Claims = user.Claims.ToList().RemoveClaim(Constants.ClaimTypes.Role, "admin");
                         }
                     }
                     break;
                 case "gravatar":
                     {
-                        user.Claims.SetValue("gravatar", value);
+                        user.Claims = user.Claims.ToList().SetValue("gravatar", value);
                     }
                     break;
                 default:

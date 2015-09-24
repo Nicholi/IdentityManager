@@ -54,7 +54,7 @@ namespace IdentityManager.Extensions
             return null;
         }
 
-        public static void SetValue(this ICollection<Claim> claims, string type, string value)
+        public static ICollection<Claim> SetValue(this ICollection<Claim> claims, string type, string value)
         {
             if (claims == null) throw new ArgumentNullException("type");
             if (String.IsNullOrWhiteSpace(type)) throw new ArgumentNullException("type");
@@ -65,9 +65,11 @@ namespace IdentityManager.Extensions
             {
                 claims.AddClaim(type, value);
             }
+
+            return claims;
         }
         
-        public static void AddClaim(this ICollection<Claim> claims, string type, string value)
+        public static ICollection<Claim> AddClaim(this ICollection<Claim> claims, string type, string value)
         {
             if (claims == null) throw new ArgumentNullException("type");
             if (String.IsNullOrWhiteSpace(type)) throw new ArgumentNullException("type");
@@ -77,6 +79,8 @@ namespace IdentityManager.Extensions
             {
                 claims.Add(new Claim(type, value));
             }
+
+            return claims;
         }
 
         public static void RemoveClaim(this ICollection<Claim> claims, string type)
@@ -90,7 +94,7 @@ namespace IdentityManager.Extensions
             }
         }
         
-        public static void RemoveClaim(this ICollection<Claim> claims, string type, string value)
+        public static ICollection<Claim> RemoveClaim(this ICollection<Claim> claims, string type, string value)
         {
             if (claims == null) throw new ArgumentNullException("type");
             if (String.IsNullOrWhiteSpace(type)) throw new ArgumentNullException("type");
@@ -100,9 +104,11 @@ namespace IdentityManager.Extensions
             {
                 claims.Remove(claim);
             }
+
+            return claims;
         }
 
-        public static void RemoveClaims(this ICollection<Claim> claims, string type)
+        public static ICollection<Claim> RemoveClaims(this ICollection<Claim> claims, string type)
         {
             if (claims == null) throw new ArgumentNullException("type");
             if (String.IsNullOrWhiteSpace(type)) throw new ArgumentNullException("type");
@@ -112,9 +118,11 @@ namespace IdentityManager.Extensions
             {
                 claims.Remove(claim);
             }
+
+            return claims;
         }
 
-        public static void RemoveClaims(this ICollection<Claim> claims, string type, string value)
+        public static ICollection<Claim> RemoveClaims(this ICollection<Claim> claims, string type, string value)
         {
             if (claims == null) throw new ArgumentNullException("type");
             if (String.IsNullOrWhiteSpace(type)) throw new ArgumentNullException("type");
@@ -125,6 +133,8 @@ namespace IdentityManager.Extensions
             {
                 claims.Remove(claim);
             }
+
+            return claims;
         }
     }
 }

@@ -17,10 +17,10 @@ using Owin;
 using System;
 using System.Collections.Generic;
 using System.Security.Claims;
-using Thinktecture.IdentityServer.Core.Configuration;
-using Thinktecture.IdentityServer.Core.Logging;
-using Thinktecture.IdentityServer.Core.Models;
-using Thinktecture.IdentityServer.Core.Services.InMemory;
+using IdentityServer3.Core.Models;
+using IdentityServer3.Core.Services.InMemory;
+using IdentityServer3.Core.Configuration;
+using IdentityServer3.Core.Services;
 
 namespace IdentityManager.Host.IdSvr
 {
@@ -28,9 +28,19 @@ namespace IdentityManager.Host.IdSvr
     {
         public static void Configure(IAppBuilder app)
         {
-            LogProvider.SetCurrentLogProvider(new DiagnosticsTraceLogProvider());
+            var factory = new IdentityServerServiceFactory();
 
-            var factory = InMemoryFactory.Create(users:GetUsers(), scopes:GetScopes(), clients:GetClients());
+            factory.Register(new Registration<List<InMemoryUser>>(GetUsers()));
+            factory.UserService = new Registration<IUserService, InMemoryUserService>();
+
+            var clients = GetClients();
+            factory.Register(new Registration<IEnumerable<Client>>(clients));
+            factory.ClientStore = new Registration<IClientStore>(typeof(InMemoryClientStore));
+            factory.CorsPolicyService = new Registration<ICorsPolicyService>(new InMemoryCorsPolicyService(clients));
+
+            factory.Register(new Registration<IEnumerable<Scope>>(GetScopes()));
+            factory.ScopeStore = new Registration<IScopeStore>(typeof(InMemoryScopeStore));
+
             var idsrvOptions = new IdentityServerOptions
             {
                 SiteName = "IdentityServer v3",
@@ -38,8 +48,7 @@ namespace IdentityManager.Host.IdSvr
                 Endpoints = new EndpointOptions {
                     EnableCspReportEndpoint = true
                 },
-                Factory = factory,
-                CorsPolicy = CorsPolicy.AllowAll,
+                Factory = factory
             };
             app.UseIdentityServer(idsrvOptions);
         }
@@ -83,7 +92,7 @@ namespace IdentityManager.Host.IdSvr
                     PostLogoutRedirectUris = new List<string>{
                         "https://localhost:44337/idm"
                     },
-                    IdentityProviderRestrictions = new List<string>(){Thinktecture.IdentityServer.Core.Constants.PrimaryAuthenticationType}
+                    IdentityProviderRestrictions = new List<string>(){IdentityServer3.Core.Constants.PrimaryAuthenticationType}
                 },
             };
         }

@@ -29,6 +29,7 @@ using Microsoft.Owin;
 using IdentityManager.Host;
 using System.Threading.Tasks;
 using System.IdentityModel.Tokens;
+using System.Linq;
 using IdentityServer3.Core.Services.InMemory;
 using Microsoft.Owin.Security.Cookies;
 
@@ -113,12 +114,12 @@ namespace IdentityManager.Host
                 }
             });
 
+            var rand = new System.Random();
+            var users = Users.Get(rand.Next(5000, 20000)).ToList();
             app.Map("/idm", idm =>
             {
                 var factory = new IdentityManagerServiceFactory();
 
-                var rand = new System.Random();
-                var users = Users.Get(rand.Next(5000, 20000));
                 var roles = Roles.Get(rand.Next(15));
 
                 factory.Register(new Registration<ICollection<InMemoryUser>>(users));
@@ -140,7 +141,7 @@ namespace IdentityManager.Host
             // when using IdentityManager in Token security mode. normally you'd configure this elsewhere.
             app.Map("/ids", ids =>
             {
-                IdSvrConfig.Configure(ids);
+                IdSvrConfig.Configure(ids, users);
             });
         }
     }

@@ -26,11 +26,11 @@ namespace IdentityManager.Host.IdSvr
 {
     public class IdSvrConfig
     {
-        public static void Configure(IAppBuilder app)
+        public static void Configure(IAppBuilder app, List<InMemoryUser> users)
         {
             var factory = new IdentityServerServiceFactory();
 
-            factory.Register(new Registration<List<InMemoryUser>>(GetUsers()));
+            factory.Register(new Registration<List<InMemoryUser>>(users));
             factory.UserService = new Registration<IUserService, InMemoryUserService>();
 
             var clients = GetClients();
@@ -51,30 +51,6 @@ namespace IdentityManager.Host.IdSvr
                 Factory = factory
             };
             app.UseIdentityServer(idsrvOptions);
-        }
-
-        static List<InMemoryUser> GetUsers()
-        {
-            return new List<InMemoryUser>{
-                new InMemoryUser{
-                    Subject = Guid.Parse("951a965f-1f84-4360-90e4-3f6deac7b9bc").ToString(),
-                    Username = "admin", 
-                    Password = "admin",
-                    Claims = new Claim[]{
-                        new Claim(Constants.ClaimTypes.Name, "Admin"),
-                        new Claim(Constants.ClaimTypes.Role, "IdentityManagerAdministrator"),
-                    }
-                },
-                new InMemoryUser{
-                    Subject = Guid.Parse("851a965f-1f84-4360-90e4-3f6deac7b9bc").ToString(),
-                    Username = "alice", 
-                    Password = "alice",
-                    Claims = new Claim[]{
-                        new Claim(Constants.ClaimTypes.Name, "Alice"),
-                        new Claim(Constants.ClaimTypes.Role, "Foo"),
-                    }
-                }
-            };
         }
 
         static Client[] GetClients()

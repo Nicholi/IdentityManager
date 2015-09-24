@@ -43,19 +43,16 @@ namespace IdentityManager.Host.InMemoryService
             {
                 var createprops = new List<PropertyMetadata>()
                 {
+                    PropertyMetadata.FromProperty<InMemoryUser>(x => x.Subject, type:Constants.ClaimTypes.Subject, required:true),
                     PropertyMetadata.FromProperty<InMemoryUser>(x => x.Username, type:Constants.ClaimTypes.Username, required:true),
                 };
 
                 var updateprops = new List<PropertyMetadata>();
-                updateprops.AddRange(new PropertyMetadata[]{
-                    PropertyMetadata.FromProperty<InMemoryUser>(x => x.Username, type:Constants.ClaimTypes.Username, required:true),
-                    PropertyMetadata.FromPropertyName<InMemoryUser>("Password", type:Constants.ClaimTypes.Password, required:true),
-                    PropertyMetadata.FromFunctions<InMemoryUser, string>(Constants.ClaimTypes.Name, this.GetName, this.SetName, name:"Name", required:true),
-                });
                 updateprops.AddRange(PropertyMetadata.FromType<InMemoryUser>());
                 updateprops.AddRange(new PropertyMetadata[]{
-                    PropertyMetadata.FromPropertyName<InMemoryUser>("Mobile"),
-                    PropertyMetadata.FromPropertyName<InMemoryUser>("Email", dataType:PropertyDataType.Email),
+                    PropertyMetadata.FromFunctions<InMemoryUser, string>(Constants.ClaimTypes.Name, this.GetName, this.SetName, name:"Name", required:true),
+                });
+                updateprops.AddRange(new PropertyMetadata[]{
                     new PropertyMetadata {
                         Name = "Is Administrator",
                         Type = "role.admin",

@@ -60,6 +60,7 @@ namespace IdentityManager.Host.InMemoryService
             {
                 var user = new InMemoryUser
                 {
+                    Subject = Guid.NewGuid().ToString("D"),
                     Username = GenName().ToLower(),
                     Claims = new HashSet<Claim>{
                         new Claim(Constants.ClaimTypes.Name, GenName() + " " + GenName())

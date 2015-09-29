@@ -29,6 +29,15 @@ namespace IdentityManager.Host.InMemoryService
             var users = new HashSet<InMemoryUser>
             {
                 new InMemoryUser{
+                    Subject = Guid.Parse("951a965f-1f84-4360-90e4-3f6deac7b9bc").ToString(),
+                    Username = "admin",
+                    Password = "admin",
+                    Claims = new Claim[]{
+                        new Claim(Constants.ClaimTypes.Name, "Admin"),
+                        new Claim(Constants.ClaimTypes.Role, Constants.AdminRoleName),
+                    }
+                },
+                new InMemoryUser{
                     Subject = Guid.Parse("081d965f-1f84-4360-90e4-8f6deac7b9bc").ToString(),
                     Username = "alice",
                     Password = "alice",

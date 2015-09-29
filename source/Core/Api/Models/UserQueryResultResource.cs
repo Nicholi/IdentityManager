@@ -20,15 +20,16 @@ using System.Web.Http.Routing;
 
 namespace IdentityManager.Api.Models
 {
-    public class UserQueryResultResource
+    public class UserQueryResultResource<TData>
+        where TData : UserSummary
     {
-        public UserQueryResultResource(QueryResult<UserSummary> result, UrlHelper url, UserMetadata meta)
+        public UserQueryResultResource(QueryResult<TData> result, UrlHelper url, UserMetadata meta)
         {
             if (result == null) throw new ArgumentNullException("result");
             if (url == null) throw new ArgumentNullException("url");
             if (meta == null) throw new ArgumentNullException("meta");
 
-            Data = new UserQueryResultResourceData(result, url, meta);
+            Data = new UserQueryResultResourceData<TData>(result, url, meta);
             
             var links = new Dictionary<string, object>();
             if (meta.SupportsCreate)
@@ -38,21 +39,22 @@ namespace IdentityManager.Api.Models
             Links = links;
         }
 
-        public UserQueryResultResourceData Data { get; set; }
+        public UserQueryResultResourceData<TData> Data { get; set; }
         public object Links { get; set; }
     }
 
-    public class UserQueryResultResourceData : QueryResult<UserSummary>
+    public class UserQueryResultResourceData<TData> : QueryResult<TData>
+        where TData : UserSummary
     {
         static UserQueryResultResourceData()
         {
-            AutoMapper.Mapper.CreateMap<QueryResult<UserSummary>, UserQueryResultResourceData>()
+            AutoMapper.Mapper.CreateMap<QueryResult<UserSummary>, UserQueryResultResourceData<UserSummary>>()
                 .ForMember(x => x.Items, opts => opts.MapFrom(x => x.Items));
-            AutoMapper.Mapper.CreateMap<UserSummary, UserResultResource>()
+            AutoMapper.Mapper.CreateMap<UserSummary, UserResultResource<UserSummary>>()
                 .ForMember(x => x.Data, opts => opts.MapFrom(x => x));
         }
 
-        public UserQueryResultResourceData(QueryResult<UserSummary> result, UrlHelper url, UserMetadata meta)
+        public UserQueryResultResourceData(QueryResult<TData> result, UrlHelper url, UserMetadata meta)
         {
             if (result == null) throw new ArgumentNullException("result");
             if (url == null) throw new ArgumentNullException("url");
@@ -73,12 +75,13 @@ namespace IdentityManager.Api.Models
             }
         }
 
-        public new IEnumerable<UserResultResource> Items { get; set; }
+        public new IEnumerable<UserResultResource<TData>> Items { get; set; }
     }
 
-    public class UserResultResource
+    public class UserResultResource<TData>
+        where TData : UserSummary
     {
-        public UserSummary Data { get; set; }
+        public TData Data { get; set; }
         public object Links { get; set; }
     }
 }

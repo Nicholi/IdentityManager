@@ -21,6 +21,7 @@ using IdentityServer3.Core.Models;
 using IdentityServer3.Core.Services.InMemory;
 using IdentityServer3.Core.Configuration;
 using IdentityServer3.Core.Services;
+using Serilog;
 
 namespace IdentityManager.Host.IdSvr
 {
@@ -28,6 +29,11 @@ namespace IdentityManager.Host.IdSvr
     {
         public static void Configure(IAppBuilder app, List<InMemoryUser> users)
         {
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Debug()
+                .WriteTo.Trace()
+                .CreateLogger();
+
             var factory = new IdentityServerServiceFactory();
 
             factory.Register(new Registration<List<InMemoryUser>>(users));
@@ -68,7 +74,28 @@ namespace IdentityManager.Host.IdSvr
                     PostLogoutRedirectUris = new List<string>{
                         "https://localhost:44337/idm"
                     },
-                    IdentityProviderRestrictions = new List<string>(){IdentityServer3.Core.Constants.PrimaryAuthenticationType}
+                    IdentityProviderRestrictions = new List<string>(){IdentityServer3.Core.Constants.PrimaryAuthenticationType},
+                    AllowedScopes = new List<String>{
+                        "openid",
+                        "idmgr",
+                    }
+                },
+                new Client{
+                    ClientId = "idmgr_api_client",
+                    ClientName = "IdentityManagerApi",
+                    Enabled = true,
+                    Flow = Flows.ClientCredentials,
+                    ClientSecrets = new List<Secret>() { new Secret("secret".Sha256()) },
+                    IdentityProviderRestrictions = new List<string>(){IdentityServer3.Core.Constants.PrimaryAuthenticationType},
+                    AllowedScopes = new List<String>{
+                        "idmgr_rsrc",
+                    },
+                    AlwaysSendClientClaims = true,
+                    PrefixClientClaims = false,
+                    Claims = new List<Claim>()
+                    {
+                        new Claim(IdentityManager.Constants.ClaimTypes.Role, IdentityManager.Constants.AdminRoleName)
+                    }
                 },
             };
         }
@@ -86,6 +113,12 @@ namespace IdentityManager.Host.IdSvr
                         new ScopeClaim(Constants.ClaimTypes.Name),
                         new ScopeClaim(Constants.ClaimTypes.Role)
                     }
+                },
+                 new Scope{
+                    Name = "idmgr_rsrc",
+                    DisplayName = "IdentityManager",
+                    Description = "Authorization for IdentityManager",
+                    Type = ScopeType.Resource
                 },
             };
         }

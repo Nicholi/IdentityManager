@@ -19,7 +19,7 @@ using System;
 namespace IdentityManager.Configuration
 {
     /// <summary>
-    /// Models the registration of a dependency within the IdentityServer dependency injection system.
+    /// Models the registration of a dependency within the IdentityManager dependency injection system.
     /// </summary>
     public abstract class Registration
     {

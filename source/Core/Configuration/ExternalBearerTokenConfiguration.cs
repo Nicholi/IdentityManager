@@ -18,10 +18,11 @@ using Microsoft.Owin.Security.Jwt;
 using Owin;
 using System;
 using System.IdentityModel.Tokens;
+using System.Linq;
 using System.Security.Claims;
 using System.Security.Cryptography.X509Certificates;
 using System.ServiceModel.Security.Tokens;
-using Thinktecture.IdentityModel.Owin.ScopeValidation;
+using IdentityManager.AccessTokenValidation;
 
 namespace IdentityManager.Configuration
 {
@@ -33,54 +34,41 @@ namespace IdentityManager.Configuration
         }
 
         public string Scope { get; set; }
-        public string Audience { get; set; }
-        public string Issuer { get; set; }
-
-        public string SigningKey { get; set; }
-        public X509Certificate2 SigningCert { get; set; }
 
         public Func<ClaimsPrincipal, ClaimsPrincipal> ClaimsTransformation { get; set; }
+
+        public IdentityManagerBearerTokenAuthenticationOptions AuthenticationOptions { get; set; }
 
         internal override void Validate()
         {
             base.Validate();
 
             if (String.IsNullOrWhiteSpace(Scope)) throw new InvalidOperationException("OAuth2Configuration : Scope not configured");
-            if (String.IsNullOrWhiteSpace(Audience)) throw new InvalidOperationException("OAuth2Configuration : Audience not configured");
-            if (String.IsNullOrWhiteSpace(Issuer)) throw new InvalidOperationException("OAuth2Configuration : Issuer not configured");
-            if (String.IsNullOrWhiteSpace(SigningKey) && SigningCert == null) throw new InvalidOperationException("OAuth2Configuration : Signing key not configured");
+            if (AuthenticationOptions == null) throw new InvalidOperationException("OAuth2Configuration : AuthenticationOptions not configured");
+            if (String.IsNullOrWhiteSpace(AuthenticationOptions.Authority))
+            {
+                throw new InvalidOperationException("OAuth2Configuration : AuthenticationOptions.Authority not configured");
+            }
+            if (String.IsNullOrEmpty(AuthenticationOptions.IssuerName))
+            {
+                throw new InvalidOperationException("OAuth2Configuration : AuthenticationOptions.IssuerName not configured");
+            }
+            if (AuthenticationOptions.SigningCertificate == null)
+            {
+                throw new InvalidOperationException("OAuth2Configuration : AuthenticationOptions.SigningCertificate not configured");
+            }
         }
 
         public override void Configure(IAppBuilder app)
         {
-            var jwtParams = new System.IdentityModel.Tokens.TokenValidationParameters
+            // assure our IdentityManager scope is present
+            if (!AuthenticationOptions.RequiredScopes.Any(x => String.Equals(x, Scope)))
             {
-                NameClaimType = NameClaimType,
-                RoleClaimType = RoleClaimType,
-                ValidAudience = Audience,
-                ValidIssuer = Issuer,
-            };
-            if (SigningCert != null)
-            {
-                jwtParams.IssuerSigningToken = new X509SecurityToken(SigningCert);
+                var requiredScopes = AuthenticationOptions.RequiredScopes.ToList();
+                requiredScopes.Add(Scope);
+                AuthenticationOptions.RequiredScopes = requiredScopes;
             }
-            else
-            {
-                var bytes = Convert.FromBase64String(SigningKey);
-                jwtParams.IssuerSigningToken = new BinarySecretSecurityToken(bytes);
-            }
-
-            app.UseJwtBearerAuthentication(new JwtBearerAuthenticationOptions
-            {
-                TokenValidationParameters = jwtParams
-            });
-            app.RequireScopes(new ScopeValidationOptions
-            {
-                AllowAnonymousAccess = true,
-                Scopes = new string[] {
-                        Scope
-                }
-            });
+            app.UseIdentityManagerBearerTokenAuthentication(AuthenticationOptions);
             if (ClaimsTransformation != null)
             {
                 app.Use(async (ctx, next) =>

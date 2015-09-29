@@ -28,18 +28,21 @@ namespace IdentityManager.Api.Controllers
     public class PageController : ApiController
     {
         IdentityManagerOptions idmConfig;
-        public PageController(IdentityManagerOptions idmConfig)
+        IHtmlFactory htmlFactory;
+        public PageController(IdentityManagerOptions idmConfig, IHtmlFactory htmlFactory)
         {
             if (idmConfig == null) throw new ArgumentNullException("idmConfig");
+            if (htmlFactory == null) throw new ArgumentNullException("htmlFactory");
 
             this.idmConfig = idmConfig;
+            this.htmlFactory = htmlFactory;
         }
 
         [HttpGet]
         [AllowAnonymous]
         public IHttpActionResult Index()
         {
-            return new EmbeddedHtmlResult(Request, "IdentityManager.Assets.Templates.index.html", idmConfig.SecurityConfiguration);
+            return htmlFactory.GetResult(Request, "IdentityManager.Assets.Templates.index.html");
         }
 
         [HttpGet]

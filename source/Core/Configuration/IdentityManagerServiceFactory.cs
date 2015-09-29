@@ -15,6 +15,7 @@
  */
  
 using System.Collections.Generic;
+using IdentityManager.Assets;
 namespace IdentityManager.Configuration
 {
     public class IdentityManagerServiceFactory
@@ -44,5 +45,9 @@ namespace IdentityManager.Configuration
         }
 
         public Registration<IIdentityManagerService> IdentityManagerService { get; set; }
+
+        public Registration<IHtmlFactory> HtmlFactory { get; set; }
+
+        public Registration<SecurityConfiguration> SecurityConfiguration { get; set; }
     }
 }

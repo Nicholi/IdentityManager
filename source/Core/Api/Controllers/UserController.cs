@@ -74,7 +74,7 @@ namespace IdentityManager.Api.Models.Controllers
             if (result.IsSuccess)
             {
                 var meta = await GetMetadataAsync();
-                var resource = new UserQueryResultResource(result.Result, Url, meta.UserMetadata);
+                var resource = new UserQueryResultResource<UserSummary>(result.Result, Url, meta.UserMetadata);
                 return Ok(resource);
             }
 

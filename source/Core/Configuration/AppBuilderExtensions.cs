@@ -25,6 +25,7 @@ using Microsoft.Owin.Infrastructure;
 using Microsoft.Owin.Logging;
 using Microsoft.Owin.StaticFiles;
 using System;
+using IdentityManager.Assets;
 
 namespace Owin
 {
@@ -55,6 +56,15 @@ namespace Owin
                     await next();
                 }
             });
+
+            if (options.Factory.SecurityConfiguration == null)
+            {
+                options.Factory.SecurityConfiguration = new Registration<SecurityConfiguration>(options.SecurityConfiguration);
+            }
+            if (options.Factory.HtmlFactory == null)
+            {
+                options.Factory.HtmlFactory = new Registration<IHtmlFactory>(typeof(DefaultHtmlFactory));
+            }
 
             var container = AutofacConfig.Configure(options);
             app.Use<AutofacContainerMiddleware>(container);

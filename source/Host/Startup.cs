@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+using System;
 using Owin;
 using System.Collections;
 using System.Collections.Generic;
@@ -30,11 +31,12 @@ using IdentityManager.Host;
 using System.Threading.Tasks;
 using System.IdentityModel.Tokens;
 using System.Linq;
+using IdentityManager.AccessTokenValidation;
 using IdentityServer3.Core.Services.InMemory;
 using Microsoft.Owin.Security.Cookies;
 
-[assembly: OwinStartup(typeof(StartupWithLocalhostSecurity))]
-//[assembly: OwinStartup(typeof(StartupWithHostCookiesSecurity))]
+//[assembly: OwinStartup(typeof(StartupWithLocalhostSecurity))]
+[assembly: OwinStartup(typeof(StartupWithHostCookiesSecurity))]
 
 namespace IdentityManager.Host
 {
@@ -77,7 +79,7 @@ namespace IdentityManager.Host
             {
                 AuthenticationType = "Cookies",
             });
-            
+       
             app.UseOpenIdConnectAuthentication(new Microsoft.Owin.Security.OpenIdConnect.OpenIdConnectAuthenticationOptions
             {
                 AuthenticationType = "oidc",
@@ -116,11 +118,10 @@ namespace IdentityManager.Host
 
             var rand = new System.Random();
             var users = Users.Get(rand.Next(5000, 20000)).ToList();
+            var roles = Roles.Get(rand.Next(15));
             app.Map("/idm", idm =>
             {
                 var factory = new IdentityManagerServiceFactory();
-
-                var roles = Roles.Get(rand.Next(15));
 
                 factory.Register(new Registration<ICollection<InMemoryUser>>(users));
                 factory.Register(new Registration<ICollection<InMemoryRole>>(roles));
@@ -132,7 +133,34 @@ namespace IdentityManager.Host
                     SecurityConfiguration = new HostSecurityConfiguration
                     {
                         HostAuthenticationType = "Cookies",
-                        //AdditionalSignOutType = "oidc"
+                        // fires off the logout to IdS as well
+                        AdditionalSignOutType = "oidc"
+                    }
+                });
+            });
+
+            // IdM as an API accepting bearer tokens only (running side by side)
+            // if both the js IdM plus as an API is running they should use the same stores/managerservices to handle caching between both
+            app.Map("/adm", idm =>
+            {
+                var factory = new IdentityManagerServiceFactory();
+
+                factory.Register(new Registration<ICollection<InMemoryUser>>(users));
+                factory.Register(new Registration<ICollection<InMemoryRole>>(roles));
+                factory.IdentityManagerService = new Registration<IIdentityManagerService, InMemoryIdentityManagerService>();
+
+                idm.UseIdentityManager(new IdentityManagerOptions
+                {
+                    Factory = factory,
+                    SecurityConfiguration = new ExternalBearerTokenConfiguration()
+                    {
+                        AuthenticationOptions = new IdentityManagerBearerTokenAuthenticationOptions()
+                        {
+                            AuthenticationType = "Bearer",
+                            Authority = "https://localhost:44337/ids",
+                            IssuerName = "https://localhost:44337/ids",
+                            SigningCertificate = Cert.Load(),
+                        }
                     }
                 });
             });

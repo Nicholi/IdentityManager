@@ -36,6 +36,9 @@ namespace IdentityManager.Configuration
             builder.Register(config.Factory.IdentityManagerService);
             builder.Register(c => new OwinEnvironmentService(c.Resolve<IOwinContext>()));
 
+            builder.Register(config.Factory.SecurityConfiguration);
+            builder.Register(config.Factory.HtmlFactory);
+
             builder.RegisterApiControllers(typeof(AutofacConfig).Assembly);
 
             foreach (var registration in config.Factory.Registrations)

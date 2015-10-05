@@ -69,7 +69,7 @@ namespace IdentityManager.Host.IdSvr
                     Flow = Flows.Implicit,
                     RequireConsent = false,
                     RedirectUris = new List<string>{
-                        "https://localhost:44337",
+                        "https://localhost:44337/idm",
                     },
                     PostLogoutRedirectUris = new List<string>{
                         "https://localhost:44337/idm"

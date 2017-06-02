@@ -75,9 +75,9 @@ namespace IdentityManager.Host.IdSvr
                         "https://localhost:44337/idm"
                     },
                     IdentityProviderRestrictions = new List<string>(){IdentityServer3.Core.Constants.PrimaryAuthenticationType},
-                    AllowedScopes = new List<String>{
-                        "openid",
-                        "idmgr",
+                    AllowedScopes = {
+                        IdentityServer3.Core.Constants.StandardScopes.OpenId,
+                        IdentityManager.Constants.IdMgrScope
                     }
                 },
                 new Client{
@@ -105,7 +105,7 @@ namespace IdentityManager.Host.IdSvr
             return new Scope[] {
                 StandardScopes.OpenId,
                  new Scope{
-                    Name = "idmgr",
+                    Name = IdentityManager.Constants.IdMgrScope,
                     DisplayName = "IdentityManager",
                     Description = "Authorization for IdentityManager",
                     Type = ScopeType.Identity,

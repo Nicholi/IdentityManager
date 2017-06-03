@@ -54,6 +54,7 @@ namespace IdentityManager
         {
             public const string GetUsers = "GetUsers";
             public const string GetUser = "GetUser";
+            public const string GetUserByNameOrEmail = "GetUserByNameOrEmail";
             public const string CreateUser = "CreateUser";
             public const string DeleteUser = "DeleteUser";
             public const string UpdateUserProperty = "UpdateUserProperty";

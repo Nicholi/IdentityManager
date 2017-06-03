@@ -212,6 +212,17 @@ namespace IdentityManager.Host.InMemoryService
             }));
         }
 
+        public Task<IdentityManagerResult<UserDetail>> GetUserByNameOrEmailAsync(String userNameOrEmail)
+        {
+            var user = users.SingleOrDefault(x => String.Equals(x.Username, userNameOrEmail) || x.Claims.HasValue(Constants.ClaimTypes.Email, userNameOrEmail));
+            if (user == null)
+            {
+                return Task.FromResult(new IdentityManagerResult<UserDetail>((UserDetail)null));
+            }
+
+            return GetUserAsync(user.Subject);
+        }
+
         public System.Threading.Tasks.Task<IdentityManagerResult> SetUserPropertyAsync(string subject, string type, string value)
         {
             var user = users.SingleOrDefault(x => x.Subject == subject);

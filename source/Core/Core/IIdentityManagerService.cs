@@ -29,6 +29,7 @@ namespace IdentityManager
         
         Task<IdentityManagerResult<QueryResult<UserSummary>>> QueryUsersAsync(string filter, int start, int count);
         Task<IdentityManagerResult<UserDetail>> GetUserAsync(string subject);
+        Task<IdentityManagerResult<UserDetail>> GetUserByNameOrEmailAsync(string userNameOrEmail);
 
         Task<IdentityManagerResult> SetUserPropertyAsync(string subject, string type, string value);
         

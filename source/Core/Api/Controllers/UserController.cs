@@ -157,6 +157,47 @@ namespace IdentityManager.Api.Models.Controllers
             return BadRequest(result.ToError());
         }
 
+        [HttpGet, Route("other/{userNameOrEmail}", Name = Constants.RouteNames.GetUserByNameOrEmail)]
+        public async Task<IHttpActionResult> GetUserByNameOrEmailAsync(string userNameOrEmail)
+        {
+            if (String.IsNullOrWhiteSpace(userNameOrEmail))
+            {
+                ModelState["subject.String"].Errors.Clear();
+                ModelState.AddModelError("", "UserName or Email address required");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState.ToError());
+            }
+            
+            var result = await this.idmService.GetUserByNameOrEmailAsync(userNameOrEmail);
+            if (result.IsSuccess)
+            {
+                if (result.Result == null)
+                {
+                    return NotFound();
+                }
+
+                var meta = await GetMetadataAsync();
+                RoleSummary[] roles = null;
+                if (!String.IsNullOrWhiteSpace(meta.RoleMetadata.RoleClaimType))
+                {
+                    var roleResult = await idmService.QueryRolesAsync(null, -1, -1);
+                    if (!roleResult.IsSuccess)
+                    {
+                        return BadRequest(roleResult.Errors);
+                    }
+
+                    roles = roleResult.Result.Items.ToArray();
+                }
+
+                return Ok(new UserDetailResource(result.Result, Url, meta, roles));
+            }
+
+            return BadRequest(result.ToError());
+        }
+
         [HttpDelete, Route("{subject}", Name = Constants.RouteNames.DeleteUser)]
         public async Task<IHttpActionResult> DeleteUserAsync(string subject)
         {

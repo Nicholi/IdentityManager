@@ -24,13 +24,13 @@ namespace IdentityManager.Api.Models
 {
     public class UserDetailResource
     {
-        public UserDetailResource(UserDetail user, UrlHelper url, IdentityManagerMetadata idmMeta, RoleSummary[] roles)
+        public UserDetailResource(UserDetail user, UrlHelper url, IdentityManagerMetadata idmMeta, RoleSummary[] roles, Boolean skipLinks = false)
         {
             if (user == null) throw new ArgumentNullException("user");
             if (url == null) throw new ArgumentNullException("url");
             if (idmMeta == null) throw new ArgumentNullException("idmMeta");
 
-            Data = new UserDetailDataResource(user, url, idmMeta, roles);
+            Data = new UserDetailDataResource(user, url, idmMeta, roles, skipLinks);
 
             var links = new Dictionary<string, string>();
             if (idmMeta.UserMetadata.SupportsDelete)
@@ -46,7 +46,7 @@ namespace IdentityManager.Api.Models
 
     public class UserDetailDataResource : Dictionary<string, object>
     {
-        public UserDetailDataResource(UserDetail user, UrlHelper url, IdentityManagerMetadata meta, RoleSummary[] roles)
+        public UserDetailDataResource(UserDetail user, UrlHelper url, IdentityManagerMetadata meta, RoleSummary[] roles, Boolean skipLinks = false)
         {
             if (user == null) throw new ArgumentNullException("user");
             if (url == null) throw new ArgumentNullException("url");
@@ -58,25 +58,41 @@ namespace IdentityManager.Api.Models
 
             if (user.Properties != null)
             {
-                var props =
-                    from p in user.Properties
-                    let m = (from m in meta.UserMetadata.UpdateProperties where m.Type == p.Type select m).SingleOrDefault()
-                    where m != null
-                    select new
-                    {
-                        Data = m.Convert(p.Value),
-                        Meta = m,
-                        Links = new
+                IEnumerable<Object> props;
+                if (skipLinks)
+                {
+                    props =
+                        from p in user.Properties
+                        let m = (from m in meta.UserMetadata.UpdateProperties where m.Type == p.Type select m).SingleOrDefault()
+                        where m != null
+                        select new
                         {
-                            update = url.Link(Constants.RouteNames.UpdateUserProperty,
-                                new
-                                {
-                                    subject = user.Subject,
-                                    type = p.Type.ToBase64UrlEncoded()
-                                }
-                            ),
-                        }
-                    };
+                            Data = m.Convert(p.Value),
+                            Meta = m,
+                        };
+                }
+                else
+                { 
+                    props =
+                        from p in user.Properties
+                        let m = (from m in meta.UserMetadata.UpdateProperties where m.Type == p.Type select m).SingleOrDefault()
+                        where m != null
+                        select new
+                        {
+                            Data = m.Convert(p.Value),
+                            Meta = m,
+                            Links = new
+                            {
+                                update = url.Link(Constants.RouteNames.UpdateUserProperty,
+                                    new
+                                    {
+                                        subject = user.Subject,
+                                        type = p.Type.ToBase64UrlEncoded()
+                                    }
+                                ),
+                            }
+                        };
+                }
 
                 if (props.Any())
                 {
@@ -87,52 +103,87 @@ namespace IdentityManager.Api.Models
             if (roles != null && user.Claims != null)
             {
                 var roleClaims = user.Claims.Where(x => x.Type == meta.RoleMetadata.RoleClaimType);
-                var query =
-                    from r in roles
-                    orderby r.Name
-                    select new
-                    {
-                        data = roleClaims.Any(x => x.Value == r.Name),
-                        meta = new
+                IEnumerable<Object> query;
+                if (skipLinks)
+                {
+                    query =
+                        from r in roles
+                        orderby r.Name
+                        select new
                         {
-                            type = r.Name,
-                            description = r.Description,
-                        },
-                        links = new
+                            data = roleClaims.Any(x => x.Value == r.Name),
+                            meta = new
+                            {
+                                type = r.Name,
+                                description = r.Description,
+                            },
+                        };
+                }
+                else
+                {
+                    query =
+                        from r in roles
+                        orderby r.Name
+                        select new
                         {
-                            add = url.Link(Constants.RouteNames.AddRole, new { subject = user.Subject, role = r.Name.ToBase64UrlEncoded() }),
-                            remove = url.Link(Constants.RouteNames.RemoveRole, new { subject = user.Subject, role = r.Name.ToBase64UrlEncoded() })
-                        }
-                    };
+                            data = roleClaims.Any(x => x.Value == r.Name),
+                            meta = new
+                            {
+                                type = r.Name,
+                                description = r.Description,
+                            },
+                            links = new
+                            {
+                                add = url.Link(Constants.RouteNames.AddRole, new { subject = user.Subject, role = r.Name.ToBase64UrlEncoded() }),
+                                remove = url.Link(Constants.RouteNames.RemoveRole, new { subject = user.Subject, role = r.Name.ToBase64UrlEncoded() })
+                            }
+                        };
+                }
                 this["Roles"] = query.ToArray();
             }
 
             if (meta.UserMetadata.SupportsClaims && user.Claims != null)
             {
-                var claims =
-                    from c in user.Claims.ToArray()
-                    select new
+                IEnumerable<Object> claims;
+                if (skipLinks)
+                {
+                    claims =
+                        from c in user.Claims.ToArray()
+                        select new
+                        {
+                            Data = c,
+                        };
+                    this["Claims"] = new
                     {
-                        Data = c,
+                        Data = claims.ToArray(),
+                    };
+                }
+                else
+                {
+                    claims =
+                        from c in user.Claims.ToArray()
+                        select new
+                        {
+                            Data = c,
+                            Links = new
+                            {
+                                delete = url.Link(Constants.RouteNames.RemoveClaim, new
+                                {
+                                    subject = user.Subject,
+                                    type = c.Type.ToBase64UrlEncoded(),
+                                    value = c.Value.ToBase64UrlEncoded()
+                                })
+                            }
+                        };
+                    this["Claims"] = new
+                    {
+                        Data = claims.ToArray(),
                         Links = new
                         {
-                            delete = url.Link(Constants.RouteNames.RemoveClaim, new
-                            {
-                                subject = user.Subject,
-                                type = c.Type.ToBase64UrlEncoded(),
-                                value = c.Value.ToBase64UrlEncoded()
-                            })
+                            create = url.Link(Constants.RouteNames.AddClaim, new { subject = user.Subject })
                         }
                     };
-
-                this["Claims"] = new
-                {
-                    Data = claims.ToArray(),
-                    Links = new
-                    {
-                        create = url.Link(Constants.RouteNames.AddClaim, new { subject = user.Subject })
-                    }
-                };
+                }
             }
         }
     }

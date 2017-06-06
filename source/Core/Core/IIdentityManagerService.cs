@@ -13,7 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -30,6 +31,7 @@ namespace IdentityManager
         Task<IdentityManagerResult<QueryResult<UserSummary>>> QueryUsersAsync(string filter, int start, int count);
         Task<IdentityManagerResult<UserDetail>> GetUserAsync(string subject);
         Task<IdentityManagerResult<UserDetail>> GetUserByNameOrEmailAsync(string userNameOrEmail);
+        Task<IdentityManagerResult<IEnumerable<UserDetail>>> GetUsersAsync(IEnumerable<String> subjects);
 
         Task<IdentityManagerResult> SetUserPropertyAsync(string subject, string type, string value);
         

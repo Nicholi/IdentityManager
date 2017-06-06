@@ -192,10 +192,60 @@ namespace IdentityManager.Api.Models.Controllers
                     roles = roleResult.Result.Items.ToArray();
                 }
 
-                return Ok(new UserDetailResource(result.Result, Url, meta, roles));
+                return Ok(new UserDetailResource(result.Result, Url, meta, roles, true));
             }
 
             return BadRequest(result.ToError());
+        }
+
+        [HttpPost, Route("multiple", Name = Constants.RouteNames.GetMultipleUsers)]
+        public async Task<IHttpActionResult> GetMultipleUsers(String[] subjects)
+        {
+            if (subjects == null || !subjects.Any())
+            {
+                ModelState.AddModelError("subjects", "At least 1 subject required");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState.ToError());
+            }
+
+            var result = await this.idmService.GetUsersAsync(subjects);
+            if (!result.IsSuccess)
+            {
+                return BadRequest(result.ToError());
+            }
+
+            if (!result.Result.Any())
+            {
+                return Ok(new List<UserDetailResource>(0));
+            }
+
+            var roleResult = await idmService.QueryRolesAsync(null, -1, -1);
+            if (!roleResult.IsSuccess)
+            {
+                return BadRequest(roleResult.Errors);
+            }
+
+            var meta = await GetMetadataAsync();
+
+            var userResources = new List<UserDetailResource>(result.Result.Count());
+            foreach (var userDetail in result.Result)
+            {
+                RoleSummary[] roles = null;
+                if (!String.IsNullOrWhiteSpace(meta.RoleMetadata.RoleClaimType))
+                {
+                    roles = roleResult.Result.Items.ToArray();
+                }
+
+                var userDetailResource = new UserDetailResource(userDetail, Url, meta, roles, true);
+                userDetailResource.Links = null;
+
+                userResources.Add(userDetailResource);
+            }
+
+            return Ok(userResources);
         }
 
         [HttpDelete, Route("{subject}", Name = Constants.RouteNames.DeleteUser)]

@@ -223,6 +223,33 @@ namespace IdentityManager.Host.InMemoryService
             return GetUserAsync(user.Subject);
         }
 
+        public Task<IdentityManagerResult<IEnumerable<UserDetail>>> GetUsersAsync(IEnumerable<String> subjects)
+        {
+            var foundUsers = users.Where(x => subjects.Contains(x.Subject));
+            if (!foundUsers.Any())
+            {
+                return Task.FromResult(new IdentityManagerResult<IEnumerable<UserDetail>>(Enumerable.Empty<UserDetail>()));
+            }
+
+            var userDetails = new List<UserDetail>(foundUsers.Count());
+            foreach (var user in foundUsers)
+            {
+                var claims = user.Claims.Select(x => new ClaimValue { Type = x.Type, Value = x.Value });
+
+                var userDetail = new UserDetail()
+                    {
+                        Subject = user.Subject,
+                        Username = user.Username,
+                        Name = user.Claims.GetValue(Constants.ClaimTypes.Name),
+                        Claims = claims
+                    };
+
+                userDetails.Add(userDetail);
+            }
+
+            return Task.FromResult(new IdentityManagerResult<IEnumerable<UserDetail>>(userDetails));
+        }
+
         public System.Threading.Tasks.Task<IdentityManagerResult> SetUserPropertyAsync(string subject, string type, string value)
         {
             var user = users.SingleOrDefault(x => x.Subject == subject);
